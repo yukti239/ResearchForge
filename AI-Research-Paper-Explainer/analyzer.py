@@ -1,17 +1,22 @@
 import os
 from dotenv import load_dotenv
 import google.generativeai as genai
+import streamlit as st
 
 load_dotenv()
 
-genai.configure(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
-
-model = genai.GenerativeModel("gemini-2.5-flash")
+api_key = os.getenv("GEMINI_API_KEY")
+if api_key:
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-2.5-flash")
+else:
+    model = None
 
 
 def safe_generate(prompt):
+    if model is None:
+        return "⚠️ API Key Not Configured: Please add your GEMINI_API_KEY to Streamlit Cloud Secrets. Go to your app settings → Secrets and add: GEMINI_API_KEY=your_key_here"
+    
     try:
         response = model.generate_content(prompt)
         return response.text
