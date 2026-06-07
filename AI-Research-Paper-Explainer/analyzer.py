@@ -3,9 +3,19 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 import streamlit as st
 
+# Load local .env
 load_dotenv()
 
-api_key = os.getenv("GEMINI_API_KEY")
+# First check Streamlit Secrets
+# Then fallback to .env for local development
+
+api_key = None
+
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+except Exception:
+    api_key = os.getenv("GEMINI_API_KEY")
+
 if api_key:
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-2.5-flash")
@@ -14,9 +24,22 @@ else:
 
 
 def safe_generate(prompt):
+
     if model is None:
-        return "⚠️ API Key Not Configured: Please add your GEMINI_API_KEY to Streamlit Cloud Secrets. Go to your app settings → Secrets and add: GEMINI_API_KEY=your_key_here"
-    
+        return """
+⚠️ Gemini API Key not found.
+
+For Streamlit Cloud:
+
+1. Open App Settings
+2. Open Secrets
+3. Add:
+
+GEMINI_API_KEY = "your_api_key"
+
+4. Save and Reboot App
+"""
+
     try:
         response = model.generate_content(prompt)
         return response.text
